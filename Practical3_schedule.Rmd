@@ -2,10 +2,10 @@
 title: 'Practical 3: Multiple explanatory variables'
 author: "BIO2020"
 output:
-  word_document:
-    number_sections: true
   html_document:
     df_print: paged
+    number_sections: true
+  word_document:
     number_sections: true
 ---
 
