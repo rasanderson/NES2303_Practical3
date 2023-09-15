@@ -1,6 +1,6 @@
 ---
 title: 'Practical 3: Multiple explanatory variables'
-author: "BIO2020"
+author: "NES2303"
 output:
   html_document:
     df_print: paged
@@ -30,162 +30,23 @@ border:0px;
 
 
 ```{r setup, include=FALSE}
-library(bio2020)
+library(mosaic)
 library(kableExtra)
 knitr::opts_chunk$set(echo = TRUE)
 peas_dat <- read.csv("Data/peas_block.csv")
 ```
 
 # Introduction
-Now that we have developed a good understanding of linear models we are going to look at some more complex cases. The overall aim is to ensure that you are familiar with the use of linear models and the `lm()` function when you have multiple explanatory variables. This might arise in 'block' designed experiments, mixtures of continuous and categorical explanatories, and curve fitting. You will also have the opportunity to gain more confidence and expertise in manipulating and plotting your data. Specific objectives are to:
+Now that we have developed a good understanding of linear models we are going to look at some more complex cases. The overall aim is to ensure that you are familiar with the use of linear models and the `lm()` function when you have multiple explanatory variables. These might be all continuous, all categorical, or a mixture of the two. Multiple explanatory variables can also arise in curve-fitting. You will also have the opportunity to gain more confidence and expertise in manipulating and plotting your data. Specific objectives are to:
 
-1. Explore the use of blocked experimental design, and how to analyse them
-2. Understand interaction terms, and how to interpret them
+1. Two categorical explanatories, with a significant interaction terms, and how to interpret them
+2. One categorical and one continuous explanatory, with non-significant interaction term.
 3. Fitting curves to your data with `lm()`
 4. Demonstrate how to manage unbalanced designs
 5. Allow you to explore some of these ideas with new datasets (optional)
 
 
-## Refresher on basic concepts
-Recall from [Interactive Website on Blocking](https://naturalandenvironmentalscience.shinyapps.io/multiple_explan/#section-blocking) that we use block designs to increase our ability to detect a treatment effect. In the linear models we have looked at so far, there has only been one explanatory variable, so we can think of it as:
-
-$$Response = Explanatory + \epsilon$$
-where:
-
-* $Explanatory$ = your treatment, e.g. fertiliser (control, nitrogen, phosphorous)
-* $Response$ = dependent variable, e.g. crop growth as a result of fertiliser
-* $\epsilon$ = Greek letter Epsilon which stands for the unknown noise or variation in your data
-
-To determine if your explanatory variable has an effect on the response you must **separate the signal from the noise**. Thus if the unknown random variation in your data, $\epsilon$, is too big, then you won't be able to know if your explanatory affects the response.
-
-## Fully randomised design
-In a field or laboratory experiment a common design is the **fully randomised design**. For example, you might have:
-
-* 4 types of antibiotic being tested. You have 4 replicate Petri dishes for each antibiotic, and you randomly assign each antibiotic to one of the Petri dishes. You put all 15 Petri dishes on a tray into the incubator.
-* 4 varieties of tomato plant are being grown, and you want to measure the chlorophyll content of their leaves. You grow up 4 replicate seedlings of each variety, randomly put them into different pots in a glasshouse
-* 3 fertilisers plus a control (4 treatment levels) and you want to understand their effects on growth of pea plants. You allocate the fertilisers at random and later assess the growth of the pea plants.
-
-Now there is nothing wrong with these fully randomised designs, but the problem is that **they are at greater risk of going wrong**. Look at the following setup: you have 4 replicates of 4 treatments, which we'll label A, B, C and D. They are assigned at random:
-
-![](images/full_randomised.png)
-
-Purely by chance, most of treatment A is on the right, and most of treatment C on the left. Now transfer this to your experiments:
-
-* The above might represent a plastic tray with Petri dishes in an incubator. The right is next to the door of the incubator. Petri dishes with Treatment A will get more variable temperatures as the door is opened.
-* The above might represent your glasshouse. The right might be in the shade, the left in open sun. Tomatoes with Treatment C will have warmer temperatures.
-* The above might represent your plots with pea plants. There might be a wet patch of waterlogged soils on the right of the field. Peas receiving treatment A will grow less.
-
-This is going to make it hard to separate the signal from the noise. The unexplained error (noise) will be large and might swamp your analysis, so you can't draw any conclusions:
-
-![](images/large_error.png)
-
-## Randomised block design
-There might be natural variation in your "experimental arena" whether it is a laboratory, glasshouse or field experiment. A fully randomised design is vulnerable to this variation biasing your results. To solve the problem we divide the experimental arena into blocks, and randomly allocate our replicate treatments within each block:
-
-* Divide your laboratory tray into 4 strips with marker pen, arranged so that when you put the tray into the incubator one strip is near the door, the 4th strip near the back of the incubator. Have 4 Petri dishes in each strip, and randomly allocate one of your 4 antibiotics to each of the four Petri dishes.
-* Divide your glasshouse into 4 bands from sunny to shady. Within each band, randomly place 4 plant pots containing your four different varieties of tomato.
-* Divide your plot experiment with your peas into 4 areas, from the waterlogged soil to the drier soil. Within each area, mark out 4 plots, and randomly allocate the different fertiliser treatments.
-
-Now your design looks like this diagram:
-
-![](images/randomised_block.png)
-
-Here the blocks are numbered 1 to 4. Within each block the treatments A, B, C & D are allocated at random. This removes biases due to incubator doors, glasshouse shade or waterlogged fields.
-
-## How does a randomised block design help?
-You what to know whether your explanatory variable has an effect on your response, by separating the signal from the noise. The advantage of a randomised block design is that you correct for the environmental or experimental variation in your blocks. Then your model becomes:
-
-![](images/small_error.png)
-
-Some of the original variation has now gone into the block effect. This reduces the unknown variation (error), so you are **more** likely to detect any relationship between the response and explanatory.
-
-In algebraic terms your linear model is now:
-
-$$Response = Explanatory + Block + \epsilon$$
-
-Where you include an explicit term called $Block$ into your linear model
-
-# Example of a blocked experiment
-We will start by using some data that comes from the pea growth and fertiliser experiment mentioned above. The data are available on Canvas in the `peas_block.csv` file and use the `read.csv()` function to import it into `peas_dat`. The data are in "long" format, with different columns for the block, fertiliser type and yield. The data are not arranged in a "wide" grid as in the field (like the diagrams above).
-
-When doing your own projects, wide format might be how you enter it in Excel. Long format is how you analyse it. you'll be pleased to know it's easy to convert between "long" and "wide" formats in R. See the interactive website for this practical for details if interested.
-
-![](images/Pivot_longer.png)
-
-## Initial exploration of pea data
-Do some initial explorations of your peas data. You should be able to calculate some simple statistics and visualise it before going ahead with an analysis via a linear model. Do some initial queries to check:
-
-* Overall mean yield across all the plots; use
-  + `summary(peas_dat)` which also gives minimum, maximum etc., 
-  + `mean(Yield ~ NULL, data=peas_dat)` or
-  + `mean(~Yield, data=peas_dat)`
-* Standard deviation of `Yield`
-
-**Question** When you used the `summary()` function, what did it return for the `Block` variable and the `Treatment` variable? Does a mean, minimum and maximum value for your `Block` variable make any sense?? How might it be better to record the `Block` variable?
-
-Produce a boxplot similar to this using the `gf_boxplot()` function, combined with `%>%`, `gf_labs()` and `gf_refine()` with `theme_classic()`. Build it up line-by-line, from a basic boxplot, to the more attractive one below:
-
-```{r, echo=FALSE}
-gf_boxplot(Yield ~ Treatment, data=peas_dat) %>% 
-  gf_labs(x = "Experimental treatment", y = "Yield of peas per plot (g)") %>% 
-  gf_refine(theme_classic())
-
-```
-
-
-## Linear model (two-way ANOVA) of the pea data
-### Recoding `Block` and `Treatment`
-You may have noticed that when you ran the `summary()` function earlier it returned the minimum, maximum, average etc. of your `Block` variable. This is of course nonsensical. You could just as easily have coded your six blocks A, B, C, D, E and F. Unfortunately, if you leave `Block` unchanged, R will assume it is a continuous variable, and that `Block 6` is "bigger" than `Block 1`. Likewise, the "character" class for `Treatment` is a little confusing, as it does not show the individual fertiliser treatments. We can re-code both variables into factors, and re-run the `summary()` function to see the difference. Remember that the `$` symbol allows us to access individual columns in a table ("data frame") and the `as.factor()` function tells R that the variable is categorical:
-
-```{r}
-peas_dat$Block <- as.factor(peas_dat$Block)
-peas_dat$Treatment <- as.factor(peas_dat$Treatment)
-summary(peas_dat)
-```
-
-That is much better. We no longer have silly statistics for the `Block` column, and the individual fertiliser treatments are now being displayed for the `Treatment`. What do the numbers `4` and `6` represent alongside each row of these entries?
-
-### Linear models of pea dataset with and without `Block`
-We'll begin with a simple linear model that ignores the `Block` variable, just to demonstrate the improvement afterwards. This is a one-way ANOVA, as there is only one explanatory categorical variable. It is equivalent to analysing your data as a fully-randomised design.
-
-```{r}
-pea_dat_lm1 <- lm(Yield ~ Treatment, data=peas_dat)
-print(anova(pea_dat_lm1))
-```
-
-What do you conclude from this? Do the fertilisers have a significant effect? How would your report these data? Remember that by convention p=0.05 is usually the critical cut-off for "statistical significance" so what would be an appropriate way to report your results? Do a QQ plot of the residuals? Are assumptions of the model robust?
-
-Now repeat but include `Block`. Notice that we are naming our second set of results `pea_dat_lm2`. This is a common convention in R, to end the name of the output with the name of the analysis (here `lm`) and if doing several models to add a suffix `1`, `2` etc. for clarity:
-
-
-```{r, echo=FALSE}
-pea_dat_lm2 <- lm(Yield ~ Treatment + Block, data=peas_dat)
-print(anova(pea_dat_lm2))
-```
- 
-Notice how the `Treatment` for your fertilisers is now significant. There are several points to notice here:
-
-* The total Sums of Square (a measure of total variation in your dataset) in the data is unchanged in both `lm1` and `lm2` of your pea yield. See [This Interactive Website](https://naturalandenvironmentalscience.shinyapps.io/how_anova_works/#section-variances-with-categorical-explanatory-variables) to remind yourself of the different components of SS
-* The **Residuals** are **much smaller** in `pea_dat_lm2`. Residuals are unexplained noise, or the $\epsilon$ in your data. The smaller you can make the noise, the more likely you are to detect a treatment effect.
-* The SS is the same for your `Treatment` in both `pea_dat_lm` and `pea_dat_lm2`
-* Variance explained by each term is measured in the column headed `Mean Sq` by dividing the `Sum sq` by `Df` (degrees of freedom)
-* The `F value` for the fertiliser treatment is calculated by dividing its `Mean Sq` by that of the Residuals. The bigger the F-ratio the more significant (lower p-value), i.e.
-   + F-ratio = Treatment Mean Sq / Residual Mean sq
-   + `pea_dat_lm1`  F-value = 86.427 / 30.251 = 2.857 (non-significant)
-   + `pea_dat_lm2`  F-value = 86.427 / 17.349 = 4.982 (significant)
-
-So what changed was that we moved some of the variation in your data out of "noise" and into "Block". This allowed us to focus on what we were interested in, namely the fertiliser treatment. As before, check the residuals of your second linear model, and create a QQ plot.
-
-## Which fertiliser treatment is best?
-Of course, the above analysis merely shows us that fertiliser has an effect on yield. We also want to know how one fertiliser compares with the others, as well as the Control. So we need to do a Tukey multiple comparison test, using the `TukeyHSD()` function. Try running the `TukeyHSD()` function on the `pea_dat_lm2` results. You'll see that it gives a huge amount of results, because not only does it compare all the pairwise Fertiliser combinations, it also does the same for all the Blocks. We are not interest in Block pairwise comparisons, so we can force the function to only look at the fertilisers via:
-
-```{r, eval=FALSE}
-TukeyHSD(pea_dat_lm2, which="Treatment")
-```
-
-Next, create a plot of the results of the Tukey test. Ask a demonstrator or member of staff if you are unsure how to interpret the results.
-
-# Interactions terms: when the explanatory variables are not independent
+# Multiple explanatory variables with interaction terms
 ## What are interaction terms?
 Interaction terms can be useful in both designed experiments and field surveys. They provide a way of checking whether the effects of two explanatory variables on the response are independent of each other, or alternatively whether the value of one explanatory variable alters what the other one does.
 
@@ -231,7 +92,7 @@ The $\textit{Explanatory 1}$ and $\textit{Explanatory 2}$ variables can be conti
 Let's look at the example from the [Interactive Website on interaction terms](https://naturalandenvironmentalscience.shinyapps.io/multiple_explan/#section-interactions-between-explanatory-variables)
 
 ## Example of interactions: blood plasma calcium in rabbits
-Let's look at the example of the blood Ca level in rabbits, half from a lowland agricultural farm, half from an upland farm, split according to gender. Download the file `plasma.csv` from Canvas and import the file into an R table called `plasma_dat`. Now see if you can produce a boxplot similar to the following. **Hints**:
+Let's look at the example of the blood Ca level in rabbits, half from a lowland agricultural farm, half from an upland farm, split according to gender. So we have two categorical explanatory variables in this example. Download the file `plasma.csv` from Canvas and import the file into an R table called `plasma_dat`. Now see if you can produce a boxplot similar to the following. **Hints**:
 
 * `gf_boxplot()` is main function
 * `gf_labs()` to change default labels
@@ -277,7 +138,7 @@ However, in this example the interaction term **is** significant. Indeed, you ha
 * `sex` main effect. $F_{1,16}=167.658, p<0.001$
 * `site:sex` interaction. $F_{1,16}=47.604, p<0.001$
 
-So you can see that both the `site:sex` interaction and `sex` main effect terms are highly significant, whereas the `site` main effect is non-significant. This type of result is not uncommon, but at first glance is very confusing. Why is the `site` main effect unimportant, whilst it seems to have a big impact on blood calcium in the interaction? This seems a little contradictory.
+So you can see that the `site:sex` interaction which indicates that `site` and `sex` are not independent of each other in their effects on blood calcium. You can also see that the `sex` main effect term is highly significant, whereas the `site` main effect is non-significant. This type of result is not uncommon, but at first glance is very confusing. Why is the `site` main effect unimportant, whilst it seems to have a big impact on blood calcium in the interaction? This seems a little contradictory.
 
 The easiest way to understand the process is to plot individual graphs for each component. See if you can create these graphs on your own.
 
@@ -314,12 +175,48 @@ The important point to note here is that **the lines are not parallel**. If the 
 
 To explore these data more [look at this interactive webpage](https://naturalandenvironmentalscience.shinyapps.io/multiple_explan/#section-interactive-demonstration). This uses the same data, but you can randomly adjust some of the terms, and see how the results change. Begin by setting the interaction term to zero, and notice the difference.
 
+# Multiple explanatories - second example
+In our second example we will have one continuous explanatory, and one categorical explanatory. You will often see this type of analysis described as an ANCOVA or Analysis of Covariance. Here we look at the biochemical tissue composition (`d13C`) of fish. The categorical explanatory is the site (NW or SE) stored in `area`, and the continuous explanatory is fish length, stored in the column `standard_length`. The data are on Canvas in the file `anr_ancova.csv`. Download them into the appropriate folder, and import them into R into a `data.frame` called `anr` and run `summary(anr)` and `View(anr)` to check that it has been imported correctly.
+
+```{r echo=FALSE}
+anr <- read.csv("Data/anr_ancova.csv")
+```
+
+## Plot your data
+Begin by plotting your fish data, with the area on the x-axis and biochemical composition on the y-axis. As you have two areas, you want to colour your points in accornding to the SE or NW locations, as well as add fitted lines:
+
+```{r plot-anr, warning=FALSE}
+# plot data first
+gf_point(d13c ~ standard_length, col = ~area, data = anr) %>%
+  gf_lm(d13c ~ standard_length, col = ~area, data = anr) %>%
+  gf_labs(x = "Standard length (mm)", y = "d13c per mil") %>% 
+  gf_theme(theme_classic())
+```
+
+## ANCOVA
+It is obvious that d13c increases with larger fish, and that concentrations appear to be higher in the SE than NW site. Are the lines parallel? Let's check with a linear model. One problem with having one continuous and one categorical explanatory variable is that the actual results from your `anova` function depend on the order in which you list the explanatory variables into the model. This can be resolved using the `Anova` function from the `car` library, which we will load first. We will discuss this in more detail in our study of unbalanced or missing data later in this practical.
+
+```{r, warning=FALSE, message=FALSE}
+library(car)
+anr_lm <- lm(d13c ~ standard_length + area + standard_length:area, data = anr)
+Anova(anr_lm) # Note capital A on Anova
+```
+
+You can see that the model shows highly significant effects from the area (SE or NW) and fish lengths with p<0.001 in both cases (remember the column headed `Pr(>F)` contains your p-values, and `e-15` indicates lots of zeros, so is a very low number). In contract the interaction term is non-significant with p=0.552. Let us therefore simplify the model and create one without the interaction term. Simpler models are better in general:
+
+```{r}
+anr_lm2 <- lm(d13c ~ standard_length + area, data = anr)
+Anova(anr_lm2)
+```
+
+This second model is the one to use. Remember: look at your interaction term first, and if it is non-significant then drop it from your linear model. If, as in the rabbit example, the interaction is significant then retain all your model explanatory variables.
+
 # Using linear models to fit curves
 How can a linear model fit a curve? The term "linear model" simply refers to the way in which the different explanatory variables are combined. They are all combined using simple addition symbols `+`, for example, your model:
 
 `calcium_lm <- lm(calcium ~ site + sex + site:sex, data=plasma_dat)`
 
-from earlier has two `+` symbols on the right-hand side. By adjusting some terms in the explanatories you can fit curves (see below). In BIO2020 we will only use linear and generalised linear models. We will not use non-linear models.
+from earlier has two `+` symbols on the right-hand side. By adjusting some terms in the explanatories you can fit curves (see below). In NES2303 we will only use linear and generalised linear models. We will not use non-linear models.
 
 ## Data transformation or polynomials?
 It is much easier to fit a straight line than a curve, but often an initial exploration of your data by plotting it will reveal that a straight-line does not provide a satisfactory model. The two main approaches to resolve this are to:
@@ -489,7 +386,7 @@ The two analyses produce identical results for the `site:sex` interaction term, 
 ## Using different Sums of Squares (SS) with unbalanced data
 By default R uses "sequential" sums of squares (SS) when calculating the values for an ANOVA table. Sequential SS are sometimes called "Type I" tests. There are several different methods of calculating SS, all with their advantages and disadvantages. Sequential SS is usually best with balanced data, but does not work properly with unbalanced data. See [this recent paper](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2656.2009.01634.x) for a comparison of the different types of SS from a biological perspective.
 
-The easiest correction is to apply "adjusted" sums of squares, which give the same result irrespective of the order in which you enter the variables. This is available via the `Anova()` function (captial letter A), which is in the `car` package, which should be automatically loaded via the `bio2020` R package. Try the following:
+The easiest correction is to apply "adjusted" sums of squares, which give the same result irrespective of the order in which you enter the variables. This is available via the `Anova()` function (captial letter A), which is in the `car` package, which should be automatically loaded via the `NES2303` R package. Try the following:
 
 ```{r, eval=FALSE}
 Anova(plasma_unbal_lm1)
@@ -503,9 +400,148 @@ You might be wondering, "Why not use Type II tests all the time?". Some statisti
 # Take home messages from today's practical
 These are the key things you should have learnt:
 
-1. Randomised-block designs, and why they can be useful when planning your experiments
-2. How to measure whether two (or more) explanatory variables are independent in their effects via interaction terms
-3. How to fit curves using a quadratic model
-4. What to do if you have unbalanced data
+1. How to measure whether two (or more) explanatory variables are independent in their effects via interaction terms
+2. How to fit curves using a quadratic model
+3. What to do if you have unbalanced data
 
 If you have any questions about these four topics, pop them into Microsoft Teams.
+
+
+# Randomised block designs (Optional - in your own time)
+Good experimental design will improve your ability to detect treatment effects. Recall from [Interactive Website on Blocking](https://naturalandenvironmentalscience.shinyapps.io/expt_design/) that we use block designs to increase our ability to detect a treatment effect. In the linear models we have looked at so far, there has only been one explanatory variable, so we can think of it as:
+
+$$Response = Explanatory + \epsilon$$
+where:
+
+* $Explanatory$ = your treatment, e.g. fertiliser (control, nitrogen, phosphorous)
+* $Response$ = dependent variable, e.g. crop growth as a result of fertiliser
+* $\epsilon$ = Greek letter Epsilon which stands for the unknown noise or variation in your data
+
+To determine if your explanatory variable has an effect on the response you must **separate the signal from the noise**. Thus if the unknown random variation in your data, $\epsilon$, is too big, then you won't be able to know if your explanatory affects the response.
+
+## Fully randomised design
+In a field or laboratory experiment a common design is the **fully randomised design**. For example, you might have:
+
+* 4 types of antibiotic being tested. You have 4 replicate Petri dishes for each antibiotic, and you randomly assign each antibiotic to one of the Petri dishes. You put all 15 Petri dishes on a tray into the incubator.
+* 4 varieties of tomato plant are being grown, and you want to measure the chlorophyll content of their leaves. You grow up 4 replicate seedlings of each variety, randomly put them into different pots in a glasshouse
+* 3 fertilisers plus a control (4 treatment levels) and you want to understand their effects on growth of pea plants. You allocate the fertilisers at random and later assess the growth of the pea plants.
+
+Now there is nothing wrong with these fully randomised designs, but the problem is that **they are at greater risk of going wrong**. Look at the following setup: you have 4 replicates of 4 treatments, which we'll label A, B, C and D. They are assigned at random:
+
+![](images/full_randomised.png)
+
+Purely by chance, most of treatment A is on the right, and most of treatment C on the left. Now transfer this to your experiments:
+
+* The above might represent a plastic tray with Petri dishes in an incubator. The right is next to the door of the incubator. Petri dishes with Treatment A will get more variable temperatures as the door is opened.
+* The above might represent your glasshouse. The right might be in the shade, the left in open sun. Tomatoes with Treatment C will have warmer temperatures.
+* The above might represent your plots with pea plants. There might be a wet patch of waterlogged soils on the right of the field. Peas receiving treatment A will grow less.
+
+This is going to make it hard to separate the signal from the noise. The unexplained error (noise) will be large and might swamp your analysis, so you can't draw any conclusions:
+
+![](images/large_error.png)
+
+## Randomised block design
+There might be natural variation in your "experimental arena" whether it is a laboratory, glasshouse or field experiment. A fully randomised design is vulnerable to this variation biasing your results. To solve the problem we divide the experimental arena into blocks, and randomly allocate our replicate treatments within each block:
+
+* Divide your laboratory tray into 4 strips with marker pen, arranged so that when you put the tray into the incubator one strip is near the door, the 4th strip near the back of the incubator. Have 4 Petri dishes in each strip, and randomly allocate one of your 4 antibiotics to each of the four Petri dishes.
+* Divide your glasshouse into 4 bands from sunny to shady. Within each band, randomly place 4 plant pots containing your four different varieties of tomato.
+* Divide your plot experiment with your peas into 4 areas, from the waterlogged soil to the drier soil. Within each area, mark out 4 plots, and randomly allocate the different fertiliser treatments.
+
+Now your design looks like this diagram:
+
+![](images/randomised_block.png)
+
+Here the blocks are numbered 1 to 4. Within each block the treatments A, B, C & D are allocated at random. This removes biases due to incubator doors, glasshouse shade or waterlogged fields.
+
+## How does a randomised block design help?
+You what to know whether your explanatory variable has an effect on your response, by separating the signal from the noise. The advantage of a randomised block design is that you correct for the environmental or experimental variation in your blocks. Then your model becomes:
+
+![](images/small_error.png)
+
+Some of the original variation has now gone into the block effect. This reduces the unknown variation (error), so you are **more** likely to detect any relationship between the response and explanatory.
+
+In algebraic terms your linear model is now:
+
+$$Response = Explanatory + Block + \epsilon$$
+
+Where you include an explicit term called $Block$ into your linear model
+
+# Example of a blocked experiment
+We will start by using some data that comes from the pea growth and fertiliser experiment mentioned above. The data are available on Canvas in the `peas_block.csv` file and use the `read.csv()` function to import it into `peas_dat`. The data are in "long" format, with different columns for the block, fertiliser type and yield. The data are not arranged in a "wide" grid as in the field (like the diagrams above).
+
+When doing your own projects, wide format might be how you enter it in Excel. Long format is how you analyse it. you'll be pleased to know it's easy to convert between "long" and "wide" formats in R. See the interactive website for this practical for details if interested.
+
+![](images/Pivot_longer.png)
+
+## Initial exploration of pea data
+Do some initial explorations of your peas data. You should be able to calculate some simple statistics and visualise it before going ahead with an analysis via a linear model. Do some initial queries to check:
+
+* Overall mean yield across all the plots; use
+  + `summary(peas_dat)` which also gives minimum, maximum etc., 
+  + `mean(Yield ~ NULL, data=peas_dat)` or
+  + `mean(~Yield, data=peas_dat)`
+* Standard deviation of `Yield`
+
+**Question** When you used the `summary()` function, what did it return for the `Block` variable and the `Treatment` variable? Does a mean, minimum and maximum value for your `Block` variable make any sense?? How might it be better to record the `Block` variable?
+
+Produce a boxplot similar to this using the `gf_boxplot()` function, combined with `%>%`, `gf_labs()` and `gf_refine()` with `theme_classic()`. Build it up line-by-line, from a basic boxplot, to the more attractive one below:
+
+```{r, echo=FALSE}
+gf_boxplot(Yield ~ Treatment, data=peas_dat) %>% 
+  gf_labs(x = "Experimental treatment", y = "Yield of peas per plot (g)") %>% 
+  gf_refine(theme_classic())
+
+```
+
+
+## Linear model (two-way ANOVA) of the pea data
+### Recoding `Block` and `Treatment`
+You may have noticed that when you ran the `summary()` function earlier it returned the minimum, maximum, average etc. of your `Block` variable. This is of course nonsensical. You could just as easily have coded your six blocks A, B, C, D, E and F. Unfortunately, if you leave `Block` unchanged, R will assume it is a continuous variable, and that `Block 6` is "bigger" than `Block 1`. Likewise, the "character" class for `Treatment` is a little confusing, as it does not show the individual fertiliser treatments. We can re-code both variables into factors, and re-run the `summary()` function to see the difference. Remember that the `$` symbol allows us to access individual columns in a table ("data frame") and the `as.factor()` function tells R that the variable is categorical:
+
+```{r}
+peas_dat$Block <- as.factor(peas_dat$Block)
+peas_dat$Treatment <- as.factor(peas_dat$Treatment)
+summary(peas_dat)
+```
+
+That is much better. We no longer have silly statistics for the `Block` column, and the individual fertiliser treatments are now being displayed for the `Treatment`. What do the numbers `4` and `6` represent alongside each row of these entries?
+
+### Linear models of pea dataset with and without `Block`
+We'll begin with a simple linear model that ignores the `Block` variable, just to demonstrate the improvement afterwards. This is a one-way ANOVA, as there is only one explanatory categorical variable. It is equivalent to analysing your data as a fully-randomised design.
+
+```{r}
+pea_dat_lm1 <- lm(Yield ~ Treatment, data=peas_dat)
+print(anova(pea_dat_lm1))
+```
+
+What do you conclude from this? Do the fertilisers have a significant effect? How would your report these data? Remember that by convention p=0.05 is usually the critical cut-off for "statistical significance" so what would be an appropriate way to report your results? Do a QQ plot of the residuals? Are assumptions of the model robust?
+
+Now repeat but include `Block`. Notice that we are naming our second set of results `pea_dat_lm2`. This is a common convention in R, to end the name of the output with the name of the analysis (here `lm`) and if doing several models to add a suffix `1`, `2` etc. for clarity:
+
+
+```{r, echo=FALSE}
+pea_dat_lm2 <- lm(Yield ~ Treatment + Block, data=peas_dat)
+print(anova(pea_dat_lm2))
+```
+ 
+Notice how the `Treatment` for your fertilisers is now significant. There are several points to notice here:
+
+* The total Sums of Square (a measure of total variation in your dataset) in the data is unchanged in both `lm1` and `lm2` of your pea yield. See [This Interactive Website](https://naturalandenvironmentalscience.shinyapps.io/how_anova_works/#section-variances-with-categorical-explanatory-variables) to remind yourself of the different components of SS
+* The **Residuals** are **much smaller** in `pea_dat_lm2`. Residuals are unexplained noise, or the $\epsilon$ in your data. The smaller you can make the noise, the more likely you are to detect a treatment effect.
+* The SS is the same for your `Treatment` in both `pea_dat_lm` and `pea_dat_lm2`
+* Variance explained by each term is measured in the column headed `Mean Sq` by dividing the `Sum sq` by `Df` (degrees of freedom)
+* The `F value` for the fertiliser treatment is calculated by dividing its `Mean Sq` by that of the Residuals. The bigger the F-ratio the more significant (lower p-value), i.e.
+   + F-ratio = Treatment Mean Sq / Residual Mean sq
+   + `pea_dat_lm1`  F-value = 86.427 / 30.251 = 2.857 (non-significant)
+   + `pea_dat_lm2`  F-value = 86.427 / 17.349 = 4.982 (significant)
+
+So what changed was that we moved some of the variation in your data out of "noise" and into "Block". This allowed us to focus on what we were interested in, namely the fertiliser treatment. As before, check the residuals of your second linear model, and create a QQ plot.
+
+## Which fertiliser treatment is best?
+Of course, the above analysis merely shows us that fertiliser has an effect on yield. We also want to know how one fertiliser compares with the others, as well as the Control. So we need to do a Tukey multiple comparison test, using the `TukeyHSD()` function. Try running the `TukeyHSD()` function on the `pea_dat_lm2` results. You'll see that it gives a huge amount of results, because not only does it compare all the pairwise Fertiliser combinations, it also does the same for all the Blocks. We are not interest in Block pairwise comparisons, so we can force the function to only look at the fertilisers via:
+
+```{r, eval=FALSE}
+TukeyHSD(pea_dat_lm2, which="Treatment")
+```
+
+Next, create a plot of the results of the Tukey test. Ask a demonstrator or member of staff if you are unsure how to interpret the results.
