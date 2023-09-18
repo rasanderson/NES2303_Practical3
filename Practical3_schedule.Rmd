@@ -161,7 +161,7 @@ Now the sets of values are very different, with the males much lower overall tha
 
 Finally, the interaction term. As this graph is a little trickier to draw, I have included the R code. We include both the raw data, and lines connecting the means, to show the direction of change:
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 # gf_point() adds the raw data points
 # gf_line() adds lines. We use stat="summary" to indicate the mean
 gf_point(calcium ~ site, colour= ~sex, data=plasma_dat) %>%
@@ -407,7 +407,7 @@ These are the key things you should have learnt:
 If you have any questions about these four topics, pop them into Microsoft Teams.
 
 
-# Randomised block designs (Optional - in your own time)
+# How to improve your experimental design (Optional - in your own time)
 Good experimental design will improve your ability to detect treatment effects. Recall from [Interactive Website on Blocking](https://naturalandenvironmentalscience.shinyapps.io/expt_design/) that we use block designs to increase our ability to detect a treatment effect. In the linear models we have looked at so far, there has only been one explanatory variable, so we can think of it as:
 
 $$Response = Explanatory + \epsilon$$
