@@ -377,18 +377,41 @@ things go wrong.
 
 Some idiot knocks over your tray of Petri-dishes, and one of them
 gets contaminated. Some sheep escape from a nearby field, and greedily eat the
-vegetation in one of your _Rhinanthus_ experimental plots. The result is that
+vegetation in one of your experimental plots. The result is that
 whilst you may have originally designed your experiment with equal numbers of
 replicates for each level of each explanatory variable, you now have one or two
 data values missing. Your dataset is now **unbalanced** and It is at this point
-that something very weird can start to happen.
+that something very weird can start to happen. It can also arise if you have
+one categorical and one continuous explanatory (ANCOVA).
 
 ### Recap: randomised block design
-We'll begin by looking at your randomised block data that we studied earlier, 
-although note that this problem of unbalanced designs can arise in any experimental
-setup, and is not restricted to blocked designs. First look at your original
-data, when it is a nicely **balanced** data set with equal numbers of replicates
-for all levels in your categorical variables.
+We'll begin by looking at some randomised block data. A randomised block is a
+standard experimental setup, with two categorical explanatory variables. Note
+that this problem of unbalanced designs can arise in any experimental
+setup, and is not restricted to blocked designs. 
+
+First, a balanced design. Here is a summary of the data:
+
+
+```{r summary-balanced, echo=FALSE}
+plant_growth_lng <- pivot_longer(plant_growth,
+                                 cols = Control:P,
+                                 names_to = "fertiliser",
+                                 values_to = "biomass")
+plant_growth_lng$block <- as.factor(plant_growth_lng$block)
+plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
+rm(plant_growth)
+rm(plasma)
+rm(lolium)
+summary(plant_growth_lng)
+```
+
+
+and you can see that there are three levels in the fertiliser categorical, and
+four in the block categorical, with equal numbers in each level. This is nicely
+balanced data. If you create two linear models, but swap the order of predictors
+the the output results are, as you'd expect, identical:
+
 
 ```{r biomass_lm_balanced-setup}
 plant_growth_lng <- pivot_longer(plant_growth,
@@ -401,10 +424,8 @@ rm(plant_growth)
 rm(plasma)
 rm(lolium)
 ```
-```{r biomass_lm_balanced, exercise=TRUE}
-# Check your data
-summary(plant_growth_lng)
 
+```{r biomass_lm_balanced, exercise=TRUE}
 # Create two linear models, with the same predictors, but swap their order
 plant_growth_lm1 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
 plant_growth_lm2 <- lm(biomass ~ block + fertiliser, data=plant_growth_lng)
@@ -414,12 +435,31 @@ anova(plant_growth_lm1)
 anova(plant_growth_lm2)
 ```
 
-So no surprise there, both sets of results are identical. But now let's suppose
-that an error occurs (Petri-dish accident, sheep escape etc.), and you lose one
-row of data. Let's omit row 9, and repeat the analysis.
+In the second dataset, one replicate has been lost. This can easily happen in
+both laboratory and field experiments. In the following dataset we've lost a
+replicate:
 
+```{r biomass_unbalanced, echo=FALSE, warning=FALSE}
+plant_growth <- read.csv("www/plant_growth.csv")
+plant_growth_lng <- pivot_longer(plant_growth,
+                                 cols = Control:P,
+                                 names_to = "fertiliser",
+                                 values_to = "biomass")
+plant_growth_lng$block <- as.factor(plant_growth_lng$block)
+plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
+rm(plant_growth)
+rm(plasma)
+rm(lolium)
+plant_growth_lng <- plant_growth_lng[-9,]
+summary(plant_growth_lng)
+```
 
-```{r biomass_lm_unbalanced-setup}
+Notice how each level of our categorical predictors no long has the same number
+of replicates. This is an unbalanced dataset. What happens if you swap the order
+in your model of the predictors:
+
+```{r biomass_lm_unbalanced-setup, echo=FALSE, warning=FALSE}
+plant_growth <- read.csv("www/plant_growth.csv")
 plant_growth_lng <- pivot_longer(plant_growth,
                                  cols = Control:P,
                                  names_to = "fertiliser",
@@ -431,10 +471,8 @@ rm(plasma)
 rm(lolium)
 plant_growth_lng <- plant_growth_lng[-9,]
 ```
-```{r biomass_lm_unbalanced, exercise=TRUE}
-# Check your data
-summary(plant_growth_lng)
 
+```{r biomass_lm_unbalanced, exercise=TRUE}
 # Create two linear models, with the same predictors, but swap their order
 plant_growth_lm1 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
 plant_growth_lm2 <- lm(biomass ~ block + fertiliser, data=plant_growth_lng)
@@ -509,3 +547,5 @@ When you have multiple explanatory variables, key things to remember include:
 * checking for interactions. Look at the interaction term first - if it is significant then retain all predictor variables
 * you can fit curves with multiple predictors, using quadratic or 'polynomial' approach
 * if you have two categorical explanatory variables but unbalanced data, use the `Anova` function from the `car` package. If you have a mixture of categorical and continuous predictors you would need to use the `Anova` function. This is because it uses Type III sums of squares, which are insensitive to the order in which you provide the explanatory variables.
+* If you have one categorical and one continuous explanatory (sometimes called
+"ANCOVA") then always use the `Anova()` function.
