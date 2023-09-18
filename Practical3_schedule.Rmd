@@ -194,7 +194,7 @@ gf_point(d13c ~ standard_length, col = ~area, data = anr) %>%
 ```
 
 ## ANCOVA
-It is obvious that d13c increases with larger fish, and that concentrations appear to be higher in the SE than NW site. Are the lines parallel? Let's check with a linear model. One problem with having one continuous and one categorical explanatory variable is that the actual results from your `anova` function depend on the order in which you list the explanatory variables into the model. This can be resolved using the `Anova` function from the `car` library, which we will load first. We will discuss this in more detail in our study of unbalanced or missing data later in this practical.
+It is obvious that d13c increases with larger fish, and that concentrations appear to be higher in the SE than NW site. Are the lines parallel? Let's check with a linear model. One problem with having one continuous and one categorical explanatory variable is that the actual results from your `anova` function depend on the order in which you list the explanatory variables into the model. This can be resolved using the `Anova` function from the `car` library, which we will load first. 
 
 ```{r, warning=FALSE, message=FALSE}
 library(car)
@@ -210,6 +210,13 @@ Anova(anr_lm2)
 ```
 
 This second model is the one to use. Remember: look at your interaction term first, and if it is non-significant then drop it from your linear model. If, as in the rabbit example, the interaction is significant then retain all your model explanatory variables.
+
+Why did we use `Anova()` rather than the standard `anova()` function? In this
+analysis you have one continuous and one categorical explanatory variables. The
+standard for of sums-of-squares (SS) used by R (Type I) are sensitive to the 
+order in which you enter the explanatory variables into the model. The problem
+also arises with unbalanced data if a replicate is accidentally damaged. See
+the interactive website [multiple explanatories](https://naturalandenvironmentalscience.shinyapps.io/multiple_explan/#section-aggh-lost-data) for more examples.
 
 # Using linear models to fit curves
 How can a linear model fit a curve? The term "linear model" simply refers to the way in which the different explanatory variables are combined. They are all combined using simple addition symbols `+`, for example, your model:
@@ -348,61 +355,13 @@ gf_point(growth ~ water, data = lolium_dat) %>%
 
 This looks much better and more realistic. It is a better statistical model, and also makes more biological sense. Before you go further, try modifying this plot so that the horizontal axis is labelled "Soil wated %" and the vertical axis "Growth rate".
 
-# Unbalanced designs
-Unbalanced designs occur regularly in biology - the term 'unbalanced' simply means that you don't have the same number of replicates in each of your treatment levels. This can make the interpretation of the analyses a little trickier. Ideally you would have the same number of replicates in every treatment level, but sometimes for practical reasons this may not be possible. Experimental error may also cause problems, e.g.
-
-* contamination of some Petri dishes in a laboratory experiment
-* death of some plants in a glasshouse experiment
-* vandalism of some experimental plots in a field experiment (this has happened to me!)
-
-## Revisit the blood calcium rabbits dataset
-An easy way to demonstrate the problem that unbalanced data causes is to go back to our Ca in rabbits example, but deliberately remove one row of data to make it unbalanced. Perhaps one of our tagged rabbits was eaten by a fox...
-
-In the R commands below, the `[]` syntax allows us to refer to individual rows and columns of a table. For example, `plasma_dat[3, 2]` would find the number in the 3rd row and 2nd column of the table of data in `plamsa_dat`. The description `plasma_dat[-4,]` means "omit the 4th row". As we did not add anything after the `,` it keeps all the columns. Have a look at the [Data Frames](https://naturalandenvironmentalscience.shinyapps.io/RstudioInstall/#section-working-with-data) section of the Interactive Website as a refresher.
-
-```{r, eval=FALSE}
-# Omit the 4th rabbit to create an unbalanced dataset
-plasma_dat_unbal <- plasma_dat[-4,]
-
-
-# Compare the number of records in each replicate
-tally(~ site + sex, data=plasma_dat) # Original
-tally(~ site + sex, data=plasma_dat_unbal) # Unbalanced
-```
-
-The `tally()` function counts up the numbers of replicates in each of the 4 combinations of explanatory variables, and whereas the original data shows you 5 replicates in every combination, in the second `plasma_dat_unbal` dataset (greedy fox), there are only 4 upland females. **Note**: we don't need to include a `calcium` response variable on the left of the `tally()` function, since we are focussing on the explanatories.
-
-Now repeat the earlier analysis from "Example of interactions" but with the unbalanced data. Do the analyses with the interaction term last, but change the order of the main effects:
-
-```{r, eval=FALSE}
-plasma_unbal_lm1 <- lm(calcium ~ sex + site + sex:site, data=plasma_dat_unbal)
-plasma_unbal_lm2 <- lm(calcium ~ site + sex + sex:site, data=plasma_dat_unbal)
-anova(plasma_unbal_lm1)
-anova(plasma_unbal_lm2)
-```
-
-The two analyses produce identical results for the `site:sex` interaction term, but not for the `site` and `sex` main effects. This is common with unbalanced data, and sometimes variables can change from being significant to non-significant. **Repeat**: Try the same two analyses again with the original balanced `plasma_dat` dataset and you will see that in contrast the order in which you enter the variables has no effect when you have "balanced" data.
-
-## Using different Sums of Squares (SS) with unbalanced data
-By default R uses "sequential" sums of squares (SS) when calculating the values for an ANOVA table. Sequential SS are sometimes called "Type I" tests. There are several different methods of calculating SS, all with their advantages and disadvantages. Sequential SS is usually best with balanced data, but does not work properly with unbalanced data. See [this recent paper](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2656.2009.01634.x) for a comparison of the different types of SS from a biological perspective.
-
-The easiest correction is to apply "adjusted" sums of squares, which give the same result irrespective of the order in which you enter the variables. This is available via the `Anova()` function (captial letter A), which is in the `car` package, which should be automatically loaded via the `NES2303` R package. Try the following:
-
-```{r, eval=FALSE}
-Anova(plasma_unbal_lm1)
-Anova(plasma_unbal_lm2)
-```
-
-You can now see that it does not matter what order you put the explanatories into your linear model, and the result is the same. **Note**: This problem can sometimes arise if you have a mixture of continuous and categorical explanatory variables, and therefore you may wish to use `Anova()` rather than `anova()` in those circumstances.
-
-You might be wondering, "Why not use Type II tests all the time?". Some statistics packages do indeed use Type II tests as their default, and there is nothing wrong with them. However, if you have balanced data, Type II tests tend to be slightly less powerful. In other words, they are not quite as good at detecting a treatment effect compared to the default Type I test. Of course, this depends on you having balanced data!
 
 # Take home messages from today's practical
 These are the key things you should have learnt:
 
 1. How to measure whether two (or more) explanatory variables are independent in their effects via interaction terms
 2. How to fit curves using a quadratic model
-3. What to do if you have unbalanced data
+3. Remember to use the `Anova()` rather than `anova()` function for ANCOVA.
 
 If you have any questions about these four topics, pop them into Microsoft Teams.
 
