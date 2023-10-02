@@ -7,6 +7,7 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(mosaic)
+library(car)
 library(magrittr)
 caterpillers <- read.csv("www/regression.csv")
 crop_growth  <- read.csv("www/crop_growth.csv")
@@ -24,7 +25,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ## ANOVA: a common output from linear models
 
 ### Introduction
-You have already used the `anova` command when you looked at the outputs from
+You have already used the `Anova` command when you looked at the outputs from
 some of your earlier linear models. It can be used on linear models where the
 explanatory variable(s) are categorical or continuous, and can even be used to
 compare different linear models.  So, for example, you might have R code such
@@ -41,14 +42,14 @@ a continuous explanatory variable:
 
 Which is the better linear model, `bacteria_lm1` or the more complex one
 `bacteria_lm2`. You can easily see if there is a statistically significant
-difference between the models using the `anova` command:
+difference between the models using the `Anova` command:
 
-`anova(bacteria_lm1, bacteria_lm2)`
+`Anova(bacteria_lm1, bacteria_lm2)`
 
 which will print out an ANOVA table and p-value.
 
 ```{r which_lm}
-question("If you performed an anova function on bacteria_lm1 and bacteria_lm2
+question("If you performed an Anova function on bacteria_lm1 and bacteria_lm2
          and the p-value is greater than 0.05, which linear model is better for
          your data?",
          answer("bacteria_lm1", correct = TRUE, message = "Good. As there is
@@ -68,7 +69,7 @@ the caterpiller growth and crop linear models you have already used. Remember th
 
 Create the linear models again using `lm()` making sure you know which is your 
 response and explanatory variable in each case, use the `summary()` to show the
-detailed information about model parameters, and `anova()` for the ANOVA tables.
+detailed information about model parameters, and `Anova()` for the ANOVA tables.
 The solution is provided if you get really stuck, but try it on your own first.
 
 ```{r lm_models, exercise=TRUE}
@@ -78,18 +79,18 @@ The solution is provided if you get really stuck, but try it on your own first.
 head(caterpillers) # Remind yourself of what the data looks like!
 caterpiller_lm <- lm(growth ~ tannin, data=caterpillers)
 summary(caterpiller_lm)
-anova(caterpiller_lm)
+Anova(caterpiller_lm)
 
 head(crop_growth)
 crop_growth_lm <- lm(yield ~ soil, data=crop_growth)
 summary(crop_growth_lm)
-anova(crop_growth_lm)
+Anova(crop_growth_lm)
 ```
 
 The outputs from the `summary()` function are slightly different, as the
 `caterpillers_lm` has a continuous explanatory variable, whereas the 
 `crop_growth_lm` has a categorical explantory variable. However, you'll notice
-that the overall format of the outputs from the `anova()` function is the same.
+that the overall format of the outputs from the `Anova()` function is the same.
 
 The abbreviation **ANOVA** stands for **analysis of variance** yet
 the output table does not have anything described as a variance. Why?
@@ -253,7 +254,7 @@ output from your linear model:
 
 ```{r lm_caterpillers_reminder}
 caterpiller_lm <- lm(growth ~ tannin, data=caterpillers)
-anova(caterpiller_lm)
+Anova(caterpiller_lm)
 ```
 
 Look at the value headed F-value. This is 30.97. Can you see how it has been
@@ -381,7 +382,7 @@ had a significant effect on yield. The boxplot and Anova table are shown below:
 ```{r crop_yield_info}
 gf_boxplot(yield ~ soil, data=crop_growth)
 crop_growth_lm <- lm(yield ~ soil, data = crop_growth)
-anova(crop_growth_lm)
+Anova(crop_growth_lm)
 ```
 Again there are sums of squares for soil, a 'Residual' sums of squares (noise in
 the data). Not shown in the table is the Total Sums of squares. The process of
@@ -609,3 +610,12 @@ question("Which is more important in determining the statistical significance, h
                 df the more significant the p-value."),
          allow_retry = TRUE)
 ```
+
+## Summary
+ANOVA tables can be produced from any type of linear model. By convention they
+are most commonly shown when the explanatory variable(s) is categorical, in 
+what is sometimes called 'one-way ANOVA' or 'two-way ANOVA' etc. However they
+can also be produced from linear models where you have continuous explanatory
+variable(s), in what is often called 'linear regression' or 'multiple
+regression'. Don't get confused by the "labels" some books attach to these
+statistical analyses: they are all forms of linear models.
