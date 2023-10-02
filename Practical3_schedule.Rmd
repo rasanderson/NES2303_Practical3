@@ -31,7 +31,8 @@ border:0px;
 
 ```{r setup, include=FALSE}
 library(mosaic)
-library(kableExtra)
+library(car)
+#library(kableExtra)
 knitr::opts_chunk$set(echo = TRUE)
 peas_dat <- read.csv("Data/peas_block.csv")
 ```
