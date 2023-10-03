@@ -7,6 +7,7 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(mosaic)
+library(car)
 library(tidyr)
 library(magrittr)
 plant_growth <- read.csv("www/plant_growth.csv")
@@ -292,8 +293,8 @@ plant_growth_lm1 <- lm(biomass ~ fertiliser, data=plant_growth_lng)
 plant_growth_lm2 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
 
 # Check their ANOVA tables
-anova(plant_growth_lm1)
-anova(plant_growth_lm2)
+Anova(plant_growth_lm1)
+Anova(plant_growth_lm2)
 ```
 
 Look at the output from the two `summary()` functions (use the Solution button
