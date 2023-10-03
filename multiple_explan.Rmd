@@ -7,6 +7,7 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(mosaic)
+library(car)
 library(tidyr)
 library(magrittr)
 plant_growth <- read.csv("www/plant_growth.csv")
@@ -67,7 +68,7 @@ define the interaction term. Put the interaction term last.
 
 ```{r plasma_lm_interaction, echo=TRUE}
 calcium_lm <- lm(calcium ~ site + sex + site:sex, data=plasma)
-anova(calcium_lm)
+Anova(calcium_lm)
 ```
 
 You can see from the ANOVA table indicates that:
@@ -319,23 +320,25 @@ what you intend to do. You can raise a variable to the power of 2 by using `^2`:
 ```{r lolium_quadratic, echo=TRUE}
 # Original linear model
 lolium_lm1 <- lm(growth ~ water, data=lolium)
+summary(lolium_lm1)
 
 # Include both water and water-squared
 lolium_lm2 <- lm(growth ~ water + I(water^2), data=lolium)
 summary(lolium_lm2)
 
-anova(lolium_lm1, lolium_lm2)
 ```
 
 **Key things to note from above**
 
-* The R-squared has jumped to 87.6%
-* Three coefficients are produced, for the intercept, water, water-squared. As
-expected the water-squared coefficient is very small and negative (-0.008) but
+* The R-squared, which is the percentage variation explained by the model, has 
+jumped from 36.7% to 87.6%
+* Three coefficients are produced in the more complex second model `lolium_lm2`.
+These are for the intercept, water, water$^2$. As
+expected the water$^2$ coefficient is very small and negative (-0.008) but
 nevertheless highly significant (P = 0.000000295, report as P<0.001)
-* We have used the `anova()` function to compare the two linear models. This shows
-that the two models differ (F=70.48, P<0.001), with much lower residual sums of
-squares in the model containing water-squared.
+* The second model `lolium_lm2` is more complex, and we generally want to use 
+the simplest model possible. However you can see all three of its predictors
+are highly significant, and it makes better biological sense too.
 
 You can view the predicted line and see the improvement. Simply add the overall
 structure of your model (in `y ~ x + I(x^2)` syntax to the `gf_lm()` function.
@@ -365,181 +368,10 @@ $$temperature = sine(\frac{2 \pi}{24.hr})  + cosine(\frac{2\pi}{24.hr}) + Error$
 Similar methods can be used if working with weekly data (divide by 52.week number)
 or monthly data (divide by 12.month number)
 
-**Decide whether to expand with a worked example. Possibly omit for Stage 2 students**
+If you encounter cyclical data that fluctuates on a daily, weekly, monthly or
+annual basis either in Stage 2 or Stage 3 then contact me and I will help you
+to analyse it.
 
-
-## Aggh! Lost data
-### Accidents happen
-Let's face it, even in the best planned laboratory experiment sometimes unexpected
-things go wrong.
-
-![](www/lab_accident.jpg)
-
-Some idiot knocks over your tray of Petri-dishes, and one of them
-gets contaminated. Some sheep escape from a nearby field, and greedily eat the
-vegetation in one of your experimental plots. The result is that
-whilst you may have originally designed your experiment with equal numbers of
-replicates for each level of each explanatory variable, you now have one or two
-data values missing. Your dataset is now **unbalanced** and It is at this point
-that something very weird can start to happen. It can also arise if you have
-one categorical and one continuous explanatory (ANCOVA).
-
-### Recap: randomised block design
-We'll begin by looking at some randomised block data. A randomised block is a
-standard experimental setup, with two categorical explanatory variables. Note
-that this problem of unbalanced designs can arise in any experimental
-setup, and is not restricted to blocked designs. 
-
-First, a balanced design. Here is a summary of the data:
-
-
-```{r summary-balanced, echo=FALSE}
-plant_growth_lng <- pivot_longer(plant_growth,
-                                 cols = Control:P,
-                                 names_to = "fertiliser",
-                                 values_to = "biomass")
-plant_growth_lng$block <- as.factor(plant_growth_lng$block)
-plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
-rm(plant_growth)
-rm(plasma)
-rm(lolium)
-summary(plant_growth_lng)
-```
-
-
-and you can see that there are three levels in the fertiliser categorical, and
-four in the block categorical, with equal numbers in each level. This is nicely
-balanced data. If you create two linear models, but swap the order of predictors
-the the output results are, as you'd expect, identical:
-
-
-```{r biomass_lm_balanced-setup}
-plant_growth_lng <- pivot_longer(plant_growth,
-                                 cols = Control:P,
-                                 names_to = "fertiliser",
-                                 values_to = "biomass")
-plant_growth_lng$block <- as.factor(plant_growth_lng$block)
-plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
-rm(plant_growth)
-rm(plasma)
-rm(lolium)
-```
-
-```{r biomass_lm_balanced, exercise=TRUE}
-# Create two linear models, with the same predictors, but swap their order
-plant_growth_lm1 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
-plant_growth_lm2 <- lm(biomass ~ block + fertiliser, data=plant_growth_lng)
-
-# No surprise, they are the same
-anova(plant_growth_lm1)
-anova(plant_growth_lm2)
-```
-
-In the second dataset, one replicate has been lost. This can easily happen in
-both laboratory and field experiments. In the following dataset we've lost a
-replicate:
-
-```{r biomass_unbalanced, echo=FALSE, warning=FALSE}
-plant_growth <- read.csv("www/plant_growth.csv")
-plant_growth_lng <- pivot_longer(plant_growth,
-                                 cols = Control:P,
-                                 names_to = "fertiliser",
-                                 values_to = "biomass")
-plant_growth_lng$block <- as.factor(plant_growth_lng$block)
-plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
-rm(plant_growth)
-rm(plasma)
-rm(lolium)
-plant_growth_lng <- plant_growth_lng[-9,]
-summary(plant_growth_lng)
-```
-
-Notice how each level of our categorical predictors no long has the same number
-of replicates. This is an unbalanced dataset. What happens if you swap the order
-in your model of the predictors:
-
-```{r biomass_lm_unbalanced-setup, echo=FALSE, warning=FALSE}
-plant_growth <- read.csv("www/plant_growth.csv")
-plant_growth_lng <- pivot_longer(plant_growth,
-                                 cols = Control:P,
-                                 names_to = "fertiliser",
-                                 values_to = "biomass")
-plant_growth_lng$block <- as.factor(plant_growth_lng$block)
-plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
-rm(plant_growth)
-rm(plasma)
-rm(lolium)
-plant_growth_lng <- plant_growth_lng[-9,]
-```
-
-```{r biomass_lm_unbalanced, exercise=TRUE}
-# Create two linear models, with the same predictors, but swap their order
-plant_growth_lm1 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
-plant_growth_lm2 <- lm(biomass ~ block + fertiliser, data=plant_growth_lng)
-
-# Ehh?
-anova(plant_growth_lm1)
-anova(plant_growth_lm2)
-```
-
-**What on earth is going on?** All you have done is changed the order of the
-predictors, yet the SS, MS, F-values and P-statistics are no longer the same.
-Which is the "right" analysis?
-
-### Different types of sums of squares
-At this point we enter a dungeon of statistical horrors, especially as there is
-no agreement amongst statisticians as to the best way of dealing with the problem.
-It does not help that different statistical software packages (R, Minitab, SPSS,
-SAS) all handle the data in slightly different ways. In R it calculates what are
-known as "Sequential Sums of Squares" or "Type I SS". This means that each set of
-SS is calculated based on the results already found for previous predictors. This
-doesn't mess things up when you have balanced data, but causes lots of problems 
-with unbalanced data. Some other statistical packages use "Adjusted Sums of 
-Squares" or "Type II SS", which adjust for the order in which you enter the 
-explanatory variables, but at the cost of a loss of sensitivity to treatment
-effects. You can find a useful explanation, aimed at biologists, published in
- <a href="https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.1365-2656.2009.01634.x" target="_blank">this paper</a> 
- 
- General recommendations if you have unbalanced data:
- 
- * Include an interaction term if possible; this should be the first thing you
- look at
- * Run the model with the explanatory variables in both orders. Often, as in the
- example we have just looked at, whilst the P-values differ, your overall biological
- conclusions are unchanged (the P-values are fairly similar).
- * If there are big differences, consider using Type II. You can enable these
- in R by installing the `car` package via `install.packages("car")`, loading it 
- via the `library(car)` command, and then using the `Anova()` function (captial A)
- to look at the model. You can see this demonstrated below:
- 
- ```{r biomass_lm_unbalanced_car-setup}
-plant_growth_lng <- pivot_longer(plant_growth,
-                                 cols = Control:P,
-                                 names_to = "fertiliser",
-                                 values_to = "biomass")
-plant_growth_lng$block <- as.factor(plant_growth_lng$block)
-plant_growth_lng$fertiliser <- as.factor(plant_growth_lng$fertiliser)
-rm(plant_growth)
-rm(plasma)
-rm(lolium)
-plant_growth_lng <- plant_growth_lng[-9,]
-```
-```{r biomass_lm_unbalanced_car, exercise=TRUE}
-# install.packages("car") # Not needed here as already setup for you
-library(car)
-
-# Check your data
-summary(plant_growth_lng)
-
-# Create two linear models, with the same predictors, but swap their order
-plant_growth_lm1 <- lm(biomass ~ fertiliser + block, data=plant_growth_lng)
-plant_growth_lm2 <- lm(biomass ~ block + fertiliser, data=plant_growth_lng)
-
-# Note capital A in Anova to access the Type II version.
-# Results now identical even with unbalanced data
-Anova(plant_growth_lm1)
-Anova(plant_growth_lm2)
-```
 
 ## Summary
 When you have multiple explanatory variables, key things to remember include:
