@@ -186,7 +186,16 @@ anr <- read.csv("Data/anr_ancova.csv")
 ## Plot your data
 Begin by plotting your fish data, with the area on the x-axis and biochemical composition on the y-axis. As you have two areas, you want to colour your points in accornding to the SE or NW locations, as well as add fitted lines:
 
-```{r plot-anr, warning=FALSE}
+```{r plot-anrerr, warning=FALSE, echo=TRUE, eval=FALSE}
+# plot data first
+gf_point(d13c ~ standrad_length, col = ~area, data = anr) %>%
+  gf_lm(d13 ~ standard_length, col = ~area, data = anr) %>%
+  gf_labs(x = "Standard length (mm)", y = "d13c per mil") %>% 
+  gf_theme(theme_classic())
+```
+
+
+```{r plot-anr, warning=FALSE, echo=FALSE}
 # plot data first
 gf_point(d13c ~ standard_length, col = ~area, data = anr) %>%
   gf_lm(d13c ~ standard_length, col = ~area, data = anr) %>%
