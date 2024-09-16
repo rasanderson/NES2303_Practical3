@@ -93,11 +93,28 @@ The $\textit{Explanatory 1}$ and $\textit{Explanatory 2}$ variables can be conti
 Let's look at the example from the [Interactive Website on interaction terms](https://naturalandenvironmentalscience.shinyapps.io/multiple_explan/#section-interactions-between-explanatory-variables)
 
 ## Example of interactions: blood plasma calcium in rabbits
-Let's look at the example of the blood Ca level in rabbits, half from a lowland agricultural farm, half from an upland farm, split according to gender. So we have two categorical explanatory variables in this example. Download the file `plasma.csv` from Canvas and import the file into an R table called `plasma_dat`. Now see if you can produce a boxplot similar to the following. **Hints**:
+### Before you begin
+1. Start RStudio in the usual way. Open your `NES2303` project from the main menu by clicking on **File -> Recent projects... -> NES2303**. Check that the word "None" has been replaced by "NES2303" in the project listing at the top right.
+2. From the main menu click "File -> New file -> R Script"
+3. Save your script, e.g. call it `practical3.R`
+4. Write a comment line, beginning with a `#` symbol, e.g.
+```{r eval =FALSE}
+# Practical 3: investiage interaction terms
+```
+
+### Downloading and plotting your data
+Let's look at the example of the blood Ca level in rabbits, half from a lowland agricultural farm, half from an upland farm, split according to gender. So we have two categorical explanatory variables in this example.
+1. Download the file `plasma.csv` from Canvas
+2. Using the File Explorer (main Windows menu) copy the `plasma.csv` file from `Downands` and paste into your `NES2303` project folder.
+3. Edit your `practical3.R` script to import the file into an R table called `plasma_dat` using the `read.csv` function.
+
+Now see if you can produce a boxplot similar to the following. **Hints**:
 
 * `gf_boxplot()` is main function
 * `gf_labs()` to change default labels
 * `gf_refine()` to change overall format of plot
+
+Remember to save the code for your boxplot in `practical3.R` for reference!!
 
 ```{r, echo=FALSE}
 plasma_dat <- read.csv("Data/plasma.csv")
@@ -112,7 +129,9 @@ gf_boxplot(calcium ~ site, colour = ~sex, data=plasma_dat) %>%
  * in males the blood Ca increases from lowland to upland, whereas for females it decreases
  * the differences between males and females appear to be bigger at lowland than upland farms
  
- You can now create the linear model using `lm()` as usual, but include an interaction term:
+ 
+### Create a linear model with an interaction
+Using the information above, and your existing knowledge of `lm()`, try to create a linear model with soth the `site` and `sex` main effects, and also an interaction term. The resultant ANOVA table should match the one below. **Remember to include code, blank lines and comment lines in your `practical3.R` script**.
  
 ```{r, eval=TRUE, echo=FALSE}
 calcium_lm <- lm(calcium ~ site + sex + site:sex, data=plasma_dat)
@@ -129,6 +148,8 @@ Before reading on, think about these questions:
 
 * How would you report the above F and p-values in a report?
 * Which explanatory variables are "statistically significant"?
+
+Please speak to a demonstrator if unsure, particularly as the way in which R presents p-values is not in an acceptable format for your reports.
 
 ## How to interpret a linear model with interaction terms
 When you have an interaction term as one of your explanatory variables, always look at it **first**. If it is not significant, you might be able to manage with a simpler linear model that does not include interaction terms. It is always best to try and have a simpler rather than overly complex linear model when possible.
