@@ -94,18 +94,20 @@ Let's look at the example from the [Interactive Website on interaction terms](ht
 
 ## Example of interactions: blood plasma calcium in rabbits
 ### Before you begin
-1. Start RStudio in the usual way. Open your `NES2303` project from the main menu by clicking on **File -> Recent projects... -> NES2303**. Check that the word "None" has been replaced by "NES2303" in the project listing at the top right.
+1. Start RStudio in the usual way. Open your `NES2303` project from the main menu by clicking on **File -> Open project...** and navigate to your NES2303 project file and open it. Check that the word "None" has been replaced by "NES2303" in the project listing at the top right.
 2. From the main menu click "File -> New file -> R Script"
 3. Save your script, e.g. call it `practical3.R`
-4. Write a comment line, beginning with a `#` symbol, e.g.
+4. Write a comment line, beginning with a `#` symbol, followed by a blank line e.g.
 ```{r eval =FALSE}
-# Practical 3: investiage interaction terms
+# Practical 3: investigate interaction terms
+
 ```
 
 ### Downloading and plotting your data
 Let's look at the example of the blood Ca level in rabbits, half from a lowland agricultural farm, half from an upland farm, split according to gender. So we have two categorical explanatory variables in this example.
+
 1. Download the file `plasma.csv` from Canvas
-2. Using the File Explorer (main Windows menu) copy the `plasma.csv` file from `Downands` and paste into your `NES2303` project folder.
+2. Using the File Explorer (main Windows menu) copy the `plasma.csv` file from `Downloads` and paste into your `NES2303` project folder.
 3. Edit your `practical3.R` script to import the file into an R table called `plasma_dat` using the `read.csv` function.
 
 Now see if you can produce a boxplot similar to the following. **Hints**:
@@ -128,6 +130,7 @@ gf_boxplot(calcium ~ site, colour = ~sex, data=plasma_dat) %>%
  * males seem to have lower blood Ca than females overall
  * in males the blood Ca increases from lowland to upland, whereas for females it decreases
  * the differences between males and females appear to be bigger at lowland than upland farms
+ * if you were to draw a line to connect the two red boxes (females) and another line between the two blue boxes (males) the slopes of the two lines would be not be parallel.
  
  
 ### Create a linear model with an interaction
@@ -233,7 +236,7 @@ anr_lm <- lm(d13c ~ standard_length + area + standard_length:area, data = anr)
 Anova(anr_lm) # Note capital A on Anova
 ```
 
-You can see that the model shows highly significant effects from the area (SE or NW) and fish lengths with p<0.001 in both cases (remember the column headed `Pr(>F)` contains your p-values, and `e-15` indicates lots of zeros, so is a very low number). In contract the interaction term is non-significant with p=0.552. Let us therefore simplify the model and create one without the interaction term. Simpler models are better in general:
+You can see that the model shows highly significant effects from the area (SE or NW) and fish lengths with p<0.001 in both cases (remember the column headed `Pr(>F)` contains your p-values, and `e-15` indicates lots of zeros, so is a very low number). In contrast, the interaction term is non-significant with p=0.552 indicating it is unimportant. Let us therefore simplify the model and create one without the interaction term. Simpler models are better in general:
 
 ```{r}
 anr_lm2 <- lm(d13c ~ standard_length + area, data = anr)
