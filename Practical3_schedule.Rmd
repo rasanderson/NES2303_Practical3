@@ -112,9 +112,9 @@ Let's look at the example of the blood Ca level in rabbits, half from a lowland 
 
 Now see if you can produce a boxplot similar to the following. **Hints**:
 
-* `gf_boxplot()` is main function
-* `gf_labs()` to change default labels
-* `gf_refine()` to change overall format of plot
+* `gf_boxplot()` is main function. You'll need to add `colour = ~sex` to colour the boxes by sex
+* `gf_labs()` to change default labels on x and y axes
+* `gf_theme()` to change overall format of plot with the `theme_classic()` option.
 
 Remember to save the code for your boxplot in `practical3.R` for reference!!
 
@@ -210,16 +210,7 @@ anr <- read.csv("Data/anr_ancova.csv")
 ## Plot your data
 Begin by plotting your fish data, with the area on the x-axis and biochemical composition on the y-axis. As you have two areas, you want to colour your points in accornding to the SE or NW locations, as well as add fitted lines:
 
-```{r plot-anrerr, warning=FALSE, echo=TRUE, eval=FALSE}
-# plot data first
-gf_point(d13c ~ standrad_length, col = ~area, data = anr) %>%
-  gf_lm(d13 ~ standard_length, col = ~area, data = anr) %>%
-  gf_labs(x = "Standard length (mm)", y = "d13c per mil") %>% 
-  gf_theme(theme_classic())
-```
-
-
-```{r plot-anr, warning=FALSE, echo=FALSE}
+```{r plot-anr, warning=FALSE, echo=TRUE}
 # plot data first
 gf_point(d13c ~ standard_length, col = ~area, data = anr) %>%
   gf_lm(d13c ~ standard_length, col = ~area, data = anr) %>%
@@ -227,8 +218,8 @@ gf_point(d13c ~ standard_length, col = ~area, data = anr) %>%
   gf_theme(theme_classic())
 ```
 
-## ANCOVA
-It is obvious that d13c increases with larger fish, and that concentrations appear to be higher in the SE than NW site. Are the lines parallel? Let's check with a linear model. One problem with having one continuous and one categorical explanatory variable is that the actual results from your `anova` function depend on the order in which you list the explanatory variables into the model. This can be resolved using the `Anova` function from the `car` library, which we will load first. 
+## Analysis of covariance (ANCOVA)
+When you have one continuous explanatory and one categorical explanatory, most statistics textbooks describe it as "ANCOVA". Fortunately, the method of analysis is identical to before, using the `lm` command. It is obvious that d13c increases with larger fish, and that concentrations appear to be higher in the SE than NW site. Are the lines parallel? Let's check with a linear model. One problem with having one continuous and one categorical explanatory variable is that the actual results from your `anova` function depend on the order in which you list the explanatory variables into the model. This can be resolved using the `Anova` function from the `car` library, which we will load first. 
 
 ```{r, warning=FALSE, message=FALSE}
 library(car)
@@ -400,7 +391,7 @@ These are the key things you should have learnt:
 If you have any questions about these four topics, pop them into Microsoft Teams.
 
 
-# How to improve your experimental design (Optional - in your own time)
+# How to improve your experimental design (in your own time)
 Good experimental design will improve your ability to detect treatment effects. Recall from [Interactive Website on Blocking](https://naturalandenvironmentalscience.shinyapps.io/expt_design/) that we use block designs to increase our ability to detect a treatment effect. In the linear models we have looked at so far, there has only been one explanatory variable, so we can think of it as:
 
 $$Response = Explanatory + \epsilon$$
