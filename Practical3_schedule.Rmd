@@ -184,11 +184,13 @@ gf_boxplot(calcium ~ sex, data=plasma_dat)
 
 Now the sets of values are very different, with the males much lower overall than the females, which explains the large F-ratio and highly significant (p<0.001) results for `sex` main effect.
 
-Finally, the interaction term. As this graph is a little trickier to draw, I have included the R code. We include both the raw data, and lines connecting the means, to show the direction of change:
+Finally, the interaction term. As this graph is a little trickier to draw, I have included the R code. We include both the raw data, and lines connecting the means, to show the direction of change. The R code below has several lines of comments to help you understand the code, but please ask if you have questions:
 
 ```{r warning=FALSE, message=FALSE}
 # gf_point() adds the raw data points
 # gf_line() adds lines. We use stat="summary" to indicate the mean
+# gf_line() also has a group term to separate instruct R to calculate the
+# summary statistic (the mean) for each group (sex) separately
 gf_point(calcium ~ site, colour= ~sex, data=plasma_dat) %>%
   gf_line(calcium ~ site, colour= ~sex, group= ~sex, stat="summary", data=plasma_dat)
 ```
